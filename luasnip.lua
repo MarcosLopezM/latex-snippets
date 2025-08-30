@@ -1,7 +1,7 @@
 return {
 	{
 		"L3MON4D3/LuaSnip",
-		build = "make instalL_jsregexp",
+		build = "make install_jsregexp",
 		dependencies = {
 			"rafamadriz/friendly-snippets",
 		},
@@ -12,18 +12,18 @@ return {
 
 			-- User config
 			ls.config.set_config({
-				enable_autsnippets = true,
-				store_selecction_keys = "<Tab>",
+				enable_autosnippets = true,
+				store_selection_keys = "<Tab>",
 				update_events = "TextChanged,TextChangedI",
 			})
 
 			-- Keybindings
 			-- Expand or jump forward
-			vim.keymap.set({ "i", "s" }, "<Tab>", function()
+			vim.keymap.set({ "i", "s" }, "jk", function()
 				if ls.expand_or_jumpable() then
 					return "<Plug>luasnip-expand-or-jump"
 				else
-					return "<Tab>"
+					return "jk"
 				end
 			end, { expr = true, silent = true })
 
