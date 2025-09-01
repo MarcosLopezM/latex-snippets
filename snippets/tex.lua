@@ -100,7 +100,7 @@ local math_envs = {
         { trig = "emeq", dscr = "Empheq env with box" },
         fmt(
             [[
-                \begin{empheq}[box = \\<>]{<>}
+                \begin{empheq}[box = \<>]{<>}
                     <>
                 \end{empheq}
             ]],
@@ -127,7 +127,28 @@ local math_envs = {
     -- auto & for alignment: replace = with &=
     s({ trig = "=", wordTrig = false }, {
         t("&="),
-    }, { condition = in_mathzone }),
+    }, {
+        condition = function()
+            return tex.in_mathzone and (env("align") or env("align*"))
+        end,
+    }),
+
+    -- _0
+    s(
+        {
+            trig = "([%a%)%]%}])00",
+            regTrig = true,
+            wordTrig = false,
+            snippetType = "autosnippet",
+        },
+        fmta("<>_{<>}", {
+            f(function(_, snip)
+                return snip.captures[1]
+            end),
+            t("0"),
+        }),
+        { condition = tex.in_mathzone }
+    ),
 
     -- ^2
     s(
@@ -195,9 +216,48 @@ local math_envs = {
     }, { condition = in_mathzone }),
 
     -- New line in align
-    s({ trig = "ll", wordTrig = true }, {
-        t("\\\\"),
-    }, { condition = in_mathzone }),
+    s(
+        { trig = "([,.])ll", regTrig = true, snippetType = "autosnippet" },
+        fmta(
+            [[
+              <>\\
+              <>
+            ]],
+            {
+                f(function(_, snip)
+                    return snip.captures[1]
+                end),
+                i(0),
+            }
+        ),
+        {
+            condition = function()
+                return tex.in_mathzone and (env("align") or env("align*"))
+            end,
+        }
+    ),
+
+    -- No number and new line in align(*) environments
+    s(
+        { trig = "([,.])nll", regTrig = true, snippetType = "autosnippet" },
+        fmta(
+            [[
+              <>\nonumber\\
+              <>
+            ]],
+            {
+                f(function(_, snip)
+                    return snip.captures[1]
+                end),
+                i(0),
+            }
+        ),
+        {
+            condition = function()
+                return tex.in_mathzone and (env("align") or env("align*"))
+            end,
+        }
+    ),
 }
 
 local delim_snippets = {
@@ -226,6 +286,19 @@ local ref_snippets = {
         i(1),
         t("}"),
     }),
+}
+
+local misc_snippets = {
+    s(
+        { trig = "sol", context = line_begin },
+        fmta(
+            [[
+      \startsolution
+      <>
+      ]],
+            { i(0) }
+        )
+    ),
 }
 
 local nom_snippets = {
@@ -432,3 +505,4 @@ ls.add_snippets("tex", nom_snippets)
 ls.add_snippets("tex", delim_snippets)
 ls.add_snippets("tex", math_envs)
 ls.add_snippets("tex", ref_snippets)
+ls.add_snippets("tex", misc_snippets)
