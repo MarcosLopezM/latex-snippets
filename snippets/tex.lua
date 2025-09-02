@@ -1,17 +1,21 @@
 local ls = require("luasnip")
+local extras = require("luasnip.extras")
+local events = require("luasnip.util.events")
+local fmt = require("luasnip.extras.fmt").fmt
+local fmta = require("luasnip.extras.fmt").fmta
+local rep = require("luasnip.extras").rep
+local postfix = require("luasnip.extras.postfix").postfix
+local line_begin = require("luasnip.extras").line_begin
 local s = ls.snippet
 local sn = ls.snippet_node
 local t = ls.text_node
 local i = ls.insert_node
 local f = ls.function_node
+local m = extras.match
 local d = ls.dynamic_node
+local c = ls.choice_node
 -- local conds = require("luasnip.extras.expand_conditions")
 -- local make_condition = require("luasnip.extras.conditions").make_condition
-local events = require("luasnip.util.events")
-local fmt = require("luasnip.extras.fmt").fmt
-local fmta = require("luasnip.extras.fmt").fmta
-local rep = require("luasnip.extras").rep
-local line_begin = require("luasnip.extras").line_begin
 
 -- Context table
 local tex = {}
@@ -98,14 +102,17 @@ local math_envs = {
     -- Empheq environment
     s(
         { trig = "emeq", dscr = "Empheq env with box" },
-        fmt(
+        fmta(
             [[
                 \begin{empheq}[box = \<>]{<>}
                     <>
                 \end{empheq}
             ]],
-            { i(1, "style"), i(2, "env"), i(3) },
-            { delimiters = "<>" }
+            {
+                c(1, { t("mainresult"), t("secondaryresult") }),
+                c(2, { t("equation"), t("equation*") }),
+                i(3),
+            }
         ),
         { condition = tex.in_text }
     ),
@@ -183,19 +190,6 @@ local math_envs = {
         }),
         { condition = tex.in_mathzone }
     ),
-    -- d/dt
-    s({ trig = "dt", wordTrig = true }, {
-        t("\\dot{"),
-        i(1),
-        t("}"),
-    }, { condition = in_mathzone }),
-
-    -- d^2/dt^2
-    s({ trig = "ddt", wordTrig = true }, {
-        t("\\ddot{"),
-        i(1),
-        t("}"),
-    }, { condition = in_mathzone }),
 
     -- Aboxedmain
     s({ trig = "am", wordTrig = true }, {
@@ -258,6 +252,46 @@ local math_envs = {
             end,
         }
     ),
+
+    -- Sin and Cos functions with delimiters
+    s(
+        {
+            trig = "(sin)([b%u]gg?)([bp])",
+            regTrig = true,
+        },
+        fmta("\\<>\\<><><>\\<>", {
+            f(function(_, snip)
+                return snip.captures[1]
+            end),
+            f(function(_, snip)
+                local map = { bg = "big", bgg = "bigg", Bg = "Big", Bgg = "Bigg" }
+                return map[snip.captures[2]]
+            end),
+            f(function(_, snip)
+                local map = { p = "(", b = "[" }
+                return map[snip.captures[3]]
+            end),
+            i(1),
+            f(function(_, snip)
+                local delims = { bg = "big", bgg = "bigg", Bg = "Big", Bgg = "Bigg" }
+                local map = { p = ")", b = "]" }
+                return delims[snip.captures[2]] .. map[snip.captures[3]]
+            end),
+        }),
+        { condition = tex.in_mathzone }
+    ),
+
+    postfix({ trig = ".dt", desc = "First derivative of time", snippetType = "autosnippet" }, {
+        f(function(_, parent)
+            return "\\dot{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condition = tex.in_mathzone }),
+
+    postfix({ trig = ".ddt", desc = "Second derivative of time", snippetType = "autosnippet" }, {
+        f(function(_, parent)
+            return "\\ddot{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condition = tex.in_mathzone }),
 }
 
 local delim_snippets = {
@@ -385,7 +419,7 @@ local nom_snippets = {
         "enum",
         fmt(
             [[
-\begin{{enumerate}}
+\eegin{{enumerate}}
     \item {}
 \end{{enumerate}}
     ]],
