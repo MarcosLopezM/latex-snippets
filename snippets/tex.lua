@@ -419,10 +419,10 @@ local nom_snippets = {
         "enum",
         fmt(
             [[
-\eegin{{enumerate}}
-    \item {}
-\end{{enumerate}}
-    ]],
+              \begin{{enumerate}}
+                  \item {}
+              \end{{enumerate}}
+            ]],
             {
                 i(1, "first item"),
             }
@@ -498,40 +498,6 @@ local nom_snippets = {
     -- Fraction snippets
     s({ trig = "frac", wordTrig = false }, { t("\\dfrac{"), i(1), t("}{"), i(2), t("}") }, { condition = in_mathzone }),
     s({ trig = "trac", wordTrig = false }, { t("\\tfrac{"), i(1), t("}{"), i(2), t("}") }, { condition = in_mathzone }),
-
-    -- Integral snippets
-    s(
-        { trig = "int", wordTrig = false },
-        { t("\\int "), i(1, "f(x)"), t(" "), t("\\odif{"), i(2, "x"), t("}") },
-        { condition = in_mathzone }
-    ),
-
-    -- Matrix snippets
-    s(
-        { trig = "pmat", wordTrig = false },
-        fmt(
-            [[
-\begin{{pNiceMatrix}}
-    {}
-\end{{pNiceMatrix}}
-    ]],
-            { i(1) }
-        ),
-        { condition = in_mathzone }
-    ),
-
-    s(
-        { trig = "bmat", wordTrig = false },
-        fmt(
-            [[
-\begin{{bNiceMatrix}}
-    {}
-\end{{bNiceMatrix}}
-    ]],
-            { i(1) }
-        ),
-        { condition = in_mathzone }
-    ),
 }
 
 -- register snippets
