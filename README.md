@@ -2,7 +2,7 @@
 
 ## NVim configuration
 
-Copy `luasnip.lua` to `~/.config/nvim/lua/plugins` assuming you're using [https://www.lazyvim.org/](LazyVim)
+Copy `luasnip.lua` to `~/.config/nvim/lua/plugins` assuming you're using [LazyVim](https://www.lazyvim.org/)
 as your plugin manager.
 
 ```lua
