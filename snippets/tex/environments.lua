@@ -45,10 +45,11 @@ local function cmd(name)
     return vim.fn["vimtex#syntax#in"](name) == 1
 end
 
+-- Table snippet
 local table_node = function(args)
     local tabs = {}
     local count
-    table = args[1][1]:gsub("%s", ""):gsub("|", "")
+    local table = args[1][1]:gsub("%s", ""):gsub("|", "")
     count = table:len()
     for j = 1, count do
         local iNode
@@ -61,7 +62,6 @@ local table_node = function(args)
     return sn(nil, tabs)
 end
 
--- TODO: Fix recursion to avoid empty last line
 rec_table = function()
     return sn(nil, {
         c(1, {
@@ -81,8 +81,7 @@ local tabularray = {
           hlines,
           vlines,
         }
-        	<>
-          <>
+        	<> <>
         \end{tblr}
       ]],
             {
