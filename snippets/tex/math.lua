@@ -4,6 +4,7 @@ local events = require("luasnip.util.events")
 local fmta = require("luasnip.extras.fmt").fmta
 local rep = require("luasnip.extras").rep
 local line_begin = require("luasnip.extras").line_begin
+local postfix = require("luasnip.extras.postfix").postfix
 local r = ls.restore_node
 local s = ls.snippet
 local sn = ls.snippet_node
@@ -91,7 +92,150 @@ local differentiation_cmds = {
         ),
         { condition = tex.in_mathzone }
     ),
+
+    s(
+        { trig = "curl", wordTrig = false, desc = "Curl operator" },
+        fmta(
+            [[
+              \nabla \mul{<>}
+            ]],
+            {
+                i(1),
+            }
+        ),
+        { condition = tex.in_mathzone }
+    ),
+
+    s(
+        { trig = "div", wordTrig = false, desc = "Divergence operator" },
+        fmta(
+            [[
+              \nabla \cdot{<>}
+            ]],
+            {
+                i(1),
+            }
+        ),
+        { condition = tex.in_mathzone }
+    ),
+
+    s(
+        { trig = "grad", wordTrig = false, desc = "Gradient operator" },
+        fmta(
+            [[
+                  \nabla{<>}
+                ]],
+            {
+                i(1),
+            }
+        ),
+        { condition = tex.in_mathzone }
+    ),
+
+    s(
+        { trig = "lap", wordTrig = false, desc = "Laplacian operator" },
+        fmta(
+            [[
+                  <>{<>}
+                ]],
+            {
+                c(1, {
+                    t("\\nabla^{2}"),
+                    t("\\Delta"),
+                }),
+                i(2),
+            }
+        ),
+        { condition = tex.in_mathzone }
+    ),
+
+    postfix({
+        trig = ".dt",
+        match_pattern = [[[\\%w%.%_%-%"%']+$]],
+        desc = "First derivative of time",
+        snippetType = "autosnippet",
+    }, {
+        f(function(_, parent)
+            return "\\dot{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condition = tex.in_mathzone }),
+
+    postfix({
+        trig = ".ddt",
+        match_pattern = [[[\\%w%.%_%-%"%']+$]],
+        desc = "Second derivative of time",
+        snippetType = "autosnippet",
+    }, {
+        f(function(_, parent)
+            return "\\ddot{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condition = tex.in_mathzone }),
+
+    postfix({
+        trig = ".Dif",
+        match_pattern = [[[\\%w%.%_%-%"%']+$]],
+        desc = "Difference of quantity",
+        snippetType = "autosnippet",
+    }, {
+        f(function(_, parent)
+            return "\\adif{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condition = tex.in_mathzone }),
 }
+
+local vectors = {
+    postfix({
+        trig = ".vec",
+        match_pattern = [[[\\%w%.%_%-%"%']+$]],
+        desc = "Vector",
+        wordTrig = false,
+        snippetType = "autosnippet",
+    }, {
+        f(function(_, parent)
+            return "\\vect{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condtion = tex.in_mathzone }),
+
+    postfix({
+        trig = ".hat",
+        match_pattern = [[[\\%w%.%_%-%"%']+$]],
+        desc = "Unitary vector or operator",
+        wordTrig = false,
+        snippetType = "autosnippet",
+    }, {
+        f(function(_, parent)
+            return "\\op{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condtion = tex.in_mathzone }),
+
+    postfix({
+        trig = ".bvec",
+        match_pattern = [[[\\%w%.%_%-%"%']+$]],
+        desc = "Bold vector",
+        wordTrig = false,
+        snippetType = "autosnippet",
+    }, {
+        f(function(_, parent)
+            return "\\boldvect\\vect{" .. parent.snippet.env.POSTFIX_MATCH .. "}"
+        end, {}),
+    }, { condtion = tex.in_mathzone }),
+}
+
+local elements = function(_, snip)
+    local nelems = tonumber(snip.captures[1])
+    local elems = {}
+
+    for j = 1, nelems do
+        table.insert(elems, i(j))
+        table.insert(elems, t("^{2}"))
+
+        if j < nelems then
+            table.insert(elems, t(" + "))
+        end
+    end
+
+    return sn(nil, elems)
+end
 
 local math_objects = {
     s(
@@ -120,33 +264,59 @@ local math_objects = {
         { condtion = tex.in_mathzone }
     ),
 
-    -- Integral snippets
-    -- TODO: Check in detail the snippet showcase in LuaSnip wiki, probably I will have to use something similar
-    -- s(
-    --     { trig = "([d])int([f])", regTrig = true, wordTrig = false, desc = "Undefine or define integral with differential after integration sign"},
-    -- fmta(
-    --   [[
-    --   	\int<><><>
-    --   ]]
-    -- )
-    --     { condition = tex.in_mathzone }
-    -- ),
     s(
-        { trig = "int", wordTrig = false, desc = "Define integral" },
+        { trig = "norm(%d)", regTrig = true, wordTrig = false, desc = "Norm in 2D or 3D", snippetType = "autosnippet" },
+        fmta([[\norm{<>}]], {
+            d(1, elements),
+        }),
+        {
+            condition = tex.in_mathzone,
+        }
+    ),
+
+    s(
+        { trig = "abs", wordTrig = false, desc = "Absolute value" },
+        fmta([[\abs{<>}]], { i(1) }),
+        { condition = tex.in_mathzone }
+    ),
+
+    s(
+        { trig = "avg", wordTrig = false, desc = "Average of a quantity" },
+        fmta([[\avg{<>}]], { i(1) }),
+        { condition = tex.in_mathzone }
+    ),
+}
+
+local integrals_cmds = {
+    -- Integral snippets
+    s(
+        { trig = "int", wordTrig = false, desc = "Integrals" },
         fmta(
             [[
-      	\int_{<>}^{<>} \odif{<>}\medspace <>
-      ]],
+              \int<>\odif[sep-end=\medspace]{<>} <>
+            ]],
             {
-                i(1),
+                c(1, {
+                    fmta(
+                        [[
+            	_{<>}^{<>}
+            ]],
+                        {
+                            i(1),
+                            i(2),
+                        }
+                    ),
+                    sn(nil, { t(" ") }),
+                }),
                 i(2),
                 i(3),
-                i(4),
             }
         ),
-        { condtion = tex.in_mathzone }
+        { condition = tex.in_mathzone }
     ),
 }
 
 ls.add_snippets("tex", differentiation_cmds)
 ls.add_snippets("tex", math_objects)
+ls.add_snippets("tex", integrals_cmds)
+ls.add_snippets("tex", vectors)
